@@ -16,6 +16,61 @@
         }
       }
     },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      }
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
     "AppLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
@@ -47,8 +102,8 @@
               "Fn::Join": [
                 "-",
                 [
-                  "dev",
                   "serverless-flask",
+                  "dev",
                   "lambda"
                 ]
               ]
@@ -59,7 +114,8 @@
                 {
                   "Effect": "Allow",
                   "Action": [
-                    "logs:CreateLogStream"
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup"
                   ],
                   "Resource": [
                     {
@@ -105,33 +161,32 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/serverless-flask/dev/1600129266437-2020-09-15T00:21:06.437Z/serverless-flask.zip"
+          "S3Key": "serverless/serverless-flask/dev/1647849751534-2022-03-21T08:02:31.534Z/serverless-flask.zip"
         },
-        "FunctionName": "serverless-flask-dev-app",
         "Handler": "wsgi_handler.handler",
+        "Runtime": "python3.7",
+        "FunctionName": "serverless-flask-dev-app",
         "MemorySize": 1024,
+        "Timeout": 6,
         "Role": {
           "Fn::GetAtt": [
             "IamRoleLambdaExecution",
             "Arn"
           ]
-        },
-        "Runtime": "python3.7",
-        "Timeout": 6
+        }
       },
       "DependsOn": [
-        "AppLogGroup",
-        "IamRoleLambdaExecution"
+        "AppLogGroup"
       ]
     },
-    "AppLambdaVersionZLFqJs8v2me472lZFChltes3aXuQsPH33vS8o3jpkw": {
+    "AppLambdaVersionPM0XooUfy0A6x3QFaR2PDyPiZpfvRK6d6NReOdW80": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "AppLambdaFunction"
         },
-        "CodeSha256": "O2m/VIT5flDNkXMrN4hpuYbUekapruyryN9KwBGWNLM="
+        "CodeSha256": "6+JnzPihGD9XshxxDxVx0B5cyzZjfu7ZQOOmeW/KXxo="
       }
     },
     "ApiGatewayRestApi": {
@@ -142,7 +197,8 @@
           "Types": [
             "EDGE"
           ]
-        }
+        },
+        "Policy": ""
       }
     },
     "ApiGatewayResourceProxyVar": {
@@ -204,7 +260,10 @@
           }
         },
         "MethodResponses": []
-      }
+      },
+      "DependsOn": [
+        "AppLambdaPermissionApiGateway"
+      ]
     },
     "ApiGatewayMethodProxyVarAny": {
       "Type": "AWS::ApiGateway::Method",
@@ -247,9 +306,12 @@
           }
         },
         "MethodResponses": []
-      }
+      },
+      "DependsOn": [
+        "AppLambdaPermissionApiGateway"
+      ]
     },
-    "ApiGatewayDeployment1600129255587": {
+    "ApiGatewayDeployment1647849735761": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -304,12 +366,18 @@
     "ServerlessDeploymentBucketName": {
       "Value": {
         "Ref": "ServerlessDeploymentBucket"
+      },
+      "Export": {
+        "Name": "sls-serverless-flask-dev-ServerlessDeploymentBucketName"
       }
     },
     "AppLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "AppLambdaVersionZLFqJs8v2me472lZFChltes3aXuQsPH33vS8o3jpkw"
+        "Ref": "AppLambdaVersionPM0XooUfy0A6x3QFaR2PDyPiZpfvRK6d6NReOdW80"
+      },
+      "Export": {
+        "Name": "sls-serverless-flask-dev-AppLambdaFunctionQualifiedArn"
       }
     },
     "ServiceEndpoint": {
@@ -333,6 +401,9 @@
             "/dev"
           ]
         ]
+      },
+      "Export": {
+        "Name": "sls-serverless-flask-dev-ServiceEndpoint"
       }
     }
   }
